@@ -75,6 +75,18 @@ def jarCallback(id,place,value):
       else:
           return True
       return True
+bulkCols = ["id","variety ","container_type","bulk_date","flush_ids"]
+def bulkCallback(id,place,value):
+      if editingReady:
+       #       print(id)
+       # #       get_all_text_of_tasks(tables)
+       #       print(place)
+       print(f'val: {value}, id: {id}, place: {place}')
+       #       sql = f"UPDATE jars SET {jarCols[place]} = %P"
+       tempCursor = conn.cursor()
+      else:
+          return True
+      return True
 
 # def main():
 ### Initialize Tkinter
@@ -113,6 +125,7 @@ greeting = tk.Label(
 )
 
 ### Fill tables
+#### JARS
 sql = "SELECT * from jars"
 cursor.execute(sql)
 colnames = [desc[0] for desc in cursor.description]
@@ -140,11 +153,56 @@ for line in res:
               e =tk.Entry(master=frm_tmp,validate="key",validatecommand=(vcmd, line[0], cnt, "%P"),width=20)
               # e =tk.Entry(master=frm_tmp,width=20)
               # e.insert(0,txt)
-              e.insert(0,txt)
+              if txt != None:
+                e.insert(0,txt)
+              else:
+                e.insert(0, "None")
               e._id = line[0]
               e.pack(side=tk.LEFT)
               cnt = cnt + 1
        frm_tmp.pack()
+
+#### Bulk
+sql = "SELECT * from bulk"
+cursor.execute(sql)
+colnames = [desc[0] for desc in cursor.description]
+res = cursor.fetchall()
+bulk_titles = tk.Frame(master=tables)
+for col in colnames:
+       text = tk.StringVar()
+       text.set(col)
+       tk.Label(
+              text = col,
+              master=bulk_titles,
+              width=20,
+       ).pack(side=tk.LEFT)
+       # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
+bulk_titles.pack()
+bulk = tk.Frame(master=tables)
+for line in res:
+       print(line)
+       frm_tmp_bulk = tk.Frame(master=bulk)
+       cnt = 0
+       for txt in line:
+              print(txt)
+              vcmd = root.register(bulkCallback)
+              # text = tk.StringVar()
+              # text.set(txt)
+              # e =tk.Entry(master=frm_tmp,textvariable=text,validate="key",validatecommand=(vcmd,'%P'),width=20)
+              # e =tk.Entry(master=frm_tmp,validate="focusout",validatecommand=taskCallback,width=20)
+              e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(vcmd, line[0], cnt, "%P"),width=20)
+              # e =tk.Entry(master=frm_tmp,width=20)
+              # e.insert(0,txt)
+              if txt != None:
+                e.insert(0,txt)
+              else:
+                e.insert(0, "None")
+              e._id = line[0]
+              e.pack(side=tk.LEFT)
+              cnt = cnt + 1
+       frm_tmp_bulk.pack()
+bulk.pack()
+
 editingReady = True
 ###Packing
 greeting.pack()

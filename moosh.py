@@ -131,18 +131,22 @@ cursor.execute(sql)
 colnames = [desc[0] for desc in cursor.description]
 res = cursor.fetchall()
 jar_titles = tk.Frame(master=tables)
+cnt = 0
 for col in colnames:
-       text = tk.StringVar()
-       text.set(col)
-       tk.Label(
-              text = col,
-              master=jar_titles,
-              width=20,
-       ).pack(side=tk.LEFT)
-       # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
-jar_titles.pack()
+    text = tk.StringVar()
+    text.set(col)
+    tk.Label(
+            text = col,
+            master=jar_titles,
+            width=20,
+    ).grid(row=0, column=cnt)
+    cnt = cnt+1
+    # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
+jar_titles.grid()
+jars = tk.Frame(master=tables)
+linecnt = 0
 for line in res:
-       frm_tmp = tk.Frame(master=tables)
+       frm_tmp = tk.Frame(master=jars)
        cnt = 0
        for txt in line:
               vcmd = root.register(jarCallback)
@@ -158,10 +162,11 @@ for line in res:
               else:
                 e.insert(0, "None")
               e._id = line[0]
-              e.pack(side=tk.LEFT)
+              e.grid(row = linecnt, column=cnt)
               cnt = cnt + 1
-       frm_tmp.pack()
-
+       frm_tmp.grid(row = linecnt)
+       linecnt = linecnt + 1
+jars.grid()
 #### Bulk
 sql = "SELECT * from bulk"
 cursor.execute(sql)
@@ -175,9 +180,9 @@ for col in colnames:
               text = col,
               master=bulk_titles,
               width=20,
-       ).pack(side=tk.LEFT)
+       ).grid() #was left
        # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
-bulk_titles.pack()
+bulk_titles.grid()
 bulk = tk.Frame(master=tables)
 for line in res:
        print(line)
@@ -198,16 +203,16 @@ for line in res:
               else:
                 e.insert(0, "None")
               e._id = line[0]
-              e.pack(side=tk.LEFT)
+              e.grid() #left
               cnt = cnt + 1
-       frm_tmp_bulk.pack()
-bulk.pack()
+       frm_tmp_bulk.grid()
+bulk.grid()
 
 editingReady = True
 ###Packing
-greeting.pack()
-tables.pack()
-frm.pack()
+greeting.grid(row=0)
+tables.grid(row=1)
+frm.grid()
 
 ### Begin program
 print("Breakpoint")

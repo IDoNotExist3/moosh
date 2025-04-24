@@ -126,87 +126,119 @@ greeting = tk.Label(
 
 ### Fill tables
 #### JARS
-sql = "SELECT * from jars"
-cursor.execute(sql)
-colnames = [desc[0] for desc in cursor.description]
-res = cursor.fetchall()
-jar_titles = tk.Frame(master=tables)
-cnt = 0
-for col in colnames:
-    text = tk.StringVar()
-    text.set(col)
-    tk.Label(
-            text = col,
-            master=jar_titles,
-            width=20,
-    ).grid(row=0, column=cnt)
-    cnt = cnt+1
-    # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
-jar_titles.grid()
-jars = tk.Frame(master=tables)
-linecnt = 0
-for line in res:
-       frm_tmp = tk.Frame(master=jars)
-       cnt = 0
-       for txt in line:
-              vcmd = root.register(jarCallback)
-              # text = tk.StringVar()
-              # text.set(txt)
-              # e =tk.Entry(master=frm_tmp,textvariable=text,validate="key",validatecommand=(vcmd,'%P'),width=20)
-              # e =tk.Entry(master=frm_tmp,validate="focusout",validatecommand=taskCallback,width=20)
-              e =tk.Entry(master=frm_tmp,validate="key",validatecommand=(vcmd, line[0], cnt, "%P"),width=20)
-              # e =tk.Entry(master=frm_tmp,width=20)
-              # e.insert(0,txt)
-              if txt != None:
-                e.insert(0,txt)
-              else:
-                e.insert(0, "None")
-              e._id = line[0]
-              e.grid(row = linecnt, column=cnt)
-              cnt = cnt + 1
-       frm_tmp.grid(row = linecnt)
-       linecnt = linecnt + 1
-jars.grid()
-#### Bulk
-sql = "SELECT * from bulk"
-cursor.execute(sql)
-colnames = [desc[0] for desc in cursor.description]
-res = cursor.fetchall()
-bulk_titles = tk.Frame(master=tables)
-for col in colnames:
-       text = tk.StringVar()
-       text.set(col)
-       tk.Label(
-              text = col,
-              master=bulk_titles,
-              width=20,
-       ).grid() #was left
-       # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
-bulk_titles.grid()
-bulk = tk.Frame(master=tables)
-for line in res:
-       print(line)
-       frm_tmp_bulk = tk.Frame(master=bulk)
-       cnt = 0
-       for txt in line:
-              print(txt)
-              vcmd = root.register(bulkCallback)
-              # text = tk.StringVar()
-              # text.set(txt)
-              # e =tk.Entry(master=frm_tmp,textvariable=text,validate="key",validatecommand=(vcmd,'%P'),width=20)
-              # e =tk.Entry(master=frm_tmp,validate="focusout",validatecommand=taskCallback,width=20)
-              e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(vcmd, line[0], cnt, "%P"),width=20)
-              # e =tk.Entry(master=frm_tmp,width=20)
-              # e.insert(0,txt)
-              if txt != None:
-                e.insert(0,txt)
-              else:
-                e.insert(0, "None")
-              e._id = line[0]
-              e.grid() #left
-              cnt = cnt + 1
-       frm_tmp_bulk.grid()
-bulk.grid()
+tableCount = 2
+tableNames = ["jars", "bulk"]
+
+for i in range(tableCount):
+    sql = f"SELECT * from {tableNames[i]}"
+    cursor.execute(sql)
+    colnames = [desc[0] for desc in cursor.description]
+    res = cursor.fetchall()
+    titles = tk.Frame(master=tables)
+    cnt = 0
+    for col in colnames:
+        text = tk.StringVar()
+        text.set(col)
+        tk.Label(
+                text = col,
+                master=titles,
+                width=20,
+        ).grid(row=0, column=cnt) #was left
+        cnt = cnt+1
+        # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
+    titles.grid(sticky = tk.W)
+    bulk = tk.Frame(master=tables)
+    linecnt = 0
+    for line in res:
+        print(line)
+        frm_tmp_bulk = tk.Frame(master=bulk)
+        cnt = 0
+        for txt in line:
+                print(txt)
+                vcmd = root.register(bulkCallback)
+                e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(vcmd, line[0], cnt, "%P"),width=20)
+                if txt != None:
+                    e.insert(0,txt)
+                else:
+                    e.insert(0, "None")
+                e._id = line[0]
+                e.grid(row = 0, column=cnt) #left
+                cnt = cnt + 1
+        frm_tmp_bulk.grid()
+        lincnt = linecnt+1
+    bulk.grid(sticky = tk.W)
+
+
+# sql = "SELECT * from jars"
+# cursor.execute(sql)
+# colnames = [desc[0] for desc in cursor.description]
+# res = cursor.fetchall()
+# jar_titles = tk.Frame(master=tables)
+# cnt = 0
+# for col in colnames:
+#     text = tk.StringVar()
+#     text.set(col)
+#     tk.Label(
+#             text = col,
+#             master=jar_titles,
+#             width=20,
+#     ).grid(row=0, column=cnt)
+#     cnt = cnt+1
+#     # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
+# jar_titles.grid()
+# jars = tk.Frame(master=tables)
+# linecnt = 0
+# for line in res:
+#        frm_tmp = tk.Frame(master=jars)
+#        cnt = 0
+#        for txt in line:
+#               vcmd = root.register(jarCallback)
+#               e =tk.Entry(master=frm_tmp,validate="key",validatecommand=(vcmd, line[0], cnt, "%P"),width=20)
+
+#               if txt != None:
+#                 e.insert(0,txt)
+#               else:
+#                 e.insert(0, "None")
+#               e._id = line[0]
+#               e.grid(row = linecnt, column=cnt)
+#               cnt = cnt + 1
+#        frm_tmp.grid(row = linecnt)
+#        linecnt = linecnt + 1
+# jars.grid()
+# #### Bulk
+# sql = "SELECT * from bulk"
+# cursor.execute(sql)
+# colnames = [desc[0] for desc in cursor.description]
+# res = cursor.fetchall()
+# bulk_titles = tk.Frame(master=tables)
+# for col in colnames:
+#        text = tk.StringVar()
+#        text.set(col)
+#        tk.Label(
+#               text = col,
+#               master=bulk_titles,
+#               width=20,
+#        ).grid() #was left
+#        # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
+# bulk_titles.grid()
+# bulk = tk.Frame(master=tables)
+# for line in res:
+#        print(line)
+#        frm_tmp_bulk = tk.Frame(master=bulk)
+#        cnt = 0
+#        for txt in line:
+#               print(txt)
+#               vcmd = root.register(bulkCallback)
+#               e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(vcmd, line[0], cnt, "%P"),width=20)
+#               if txt != None:
+#                 e.insert(0,txt)
+#               else:
+#                 e.insert(0, "None")
+#               e._id = line[0]
+#               e.grid() #left
+#               cnt = cnt + 1
+#        frm_tmp_bulk.grid()
+# bulk.grid()
 
 editingReady = True
 ###Packing

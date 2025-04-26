@@ -3,7 +3,14 @@ import tkinter as tk
 import atexit
 from datetime import datetime
 
+tableCount = 3
 editingReady = False
+editedEntries = [{} for j in range(tableCount)]
+tableNames = ["jars", "bulk", "flushes"]
+print(editedEntries)
+JARS = 0
+BULK = 1
+FLUSHES = 2
 
 conn = psycopg2.connect(database="moosh",
                         host="localhost",
@@ -57,33 +64,57 @@ def save_all_text_of_tasks(parent_widget):
                 #     # print("Another label...")  
 
 def save():
-    save_all_text_of_tasks(tables)
+    # save_all_text_of_tasks(tables)
+    
+    tempCursor = conn.cursor()
+    
+    for table, name in zip(editedEntries, tableNames):
+        dicti = table.items()
+        for entry in dicti:
+            split = entry[0].split(",")
+            print(f"Identifier split is {split}")
+            sql = f"UPDATE {name} SET {(jarCols[int(split[1])])} = '{entry[1]}' WHERE id = {split[0]}"
+            print(sql)
+            tempCursor.execute(sql)
+
+            #####TESTING
+            # sqlRollback = "ROLLBACK"
+            # tempCursor.execute(sqlRollback)
+            conn.commit()
+
+def addEntry():
+
+    root.update()
 
 def taskCallback():
       print("1")
 #       get_all_text_of_tasks(tables)
       return True
-jarCols = ["id","variety ","date_innoculated","shake_date","bulk_date","bulk_id","grain"]
+jarCols = ["id","variety","date_innoculated","shake_date","bulk_date","bulk_id","grain"]
 def jarCallback(id,place,value):
       if editingReady:
        #       print(id)
        # #       get_all_text_of_tasks(tables)
        #       print(place)
        print(f'val: {value}, id: {id}, place: {place}')
-       #       sql = f"UPDATE jars SET {jarCols[place]} = %P"
-       tempCursor = conn.cursor()
+       sql = f"UPDATE jars SET {(jarCols[int(place)])} = {value}"
+       print(sql)
+    #    tempCursor = conn.cursor()
+       editedEntries[JARS].update({f"{id},{place}": f"{value}"})
       else:
           return True
       return True
-bulkCols = ["id","variety ","container_type","bulk_date","flush_ids"]
+bulkCols = ["id","variety","container_type","bulk_date","flush_ids"]
 def bulkCallback(id,place,value):
       if editingReady:
        #       print(id)
        # #       get_all_text_of_tasks(tables)
        #       print(place)
        print(f'val: {value}, id: {id}, place: {place}')
-       #       sql = f"UPDATE jars SET {jarCols[place]} = %P"
-       tempCursor = conn.cursor()
+       #       sql = f"UPDATE jars SET {jarCols[int(place)]} = {value}"
+       sql = f"UPDATE jars SET {bulkCols[int(place)]} = {value}"
+    #    editedEntries[BULK].append(id)
+       editedEntries[BULK].update({f"{id},{place}": f"{value}"})
       else:
           return True
       return True
@@ -128,9 +159,12 @@ greeting = tk.Label(
 #### JARS
 tableCount = 2
 tableNames = ["jars", "bulk"]
-
+vcmdBulk = root.register(bulkCallback)
+vcmdJars = root.register(jarCallback)
+callbacks = [vcmdJars,vcmdBulk]
 for i in range(tableCount):
-    sql = f"SELECT * from {tableNames[i]}"
+    
+    sql = f"SELECT * from {tableNames[i]} ORDER BY id"
     cursor.execute(sql)
     colnames = [desc[0] for desc in cursor.description]
     res = cursor.fetchall()
@@ -148,6 +182,8 @@ for i in range(tableCount):
         # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
     titles.grid(sticky = tk.W)
     bulk = tk.Frame(master=tables)
+    title = tk.Label(master=bulk, text=tableNames[i])
+    title.grid()
     linecnt = 0
     for line in res:
         print(line)
@@ -155,8 +191,8 @@ for i in range(tableCount):
         cnt = 0
         for txt in line:
                 print(txt)
-                vcmd = root.register(bulkCallback)
-                e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(vcmd, line[0], cnt, "%P"),width=20)
+                # vcmd = root.register(callbacks[i])
+                e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(callbacks[i], line[0], cnt, "%P"),width=20)
                 if txt != None:
                     e.insert(0,txt)
                 else:
@@ -166,6 +202,8 @@ for i in range(tableCount):
                 cnt = cnt + 1
         frm_tmp_bulk.grid()
         lincnt = linecnt+1
+    addEntries = tk.Button(bulk, text = "Add Entry", command = root.update())
+    addEntries.grid(sticky = tk.W)
     bulk.grid(sticky = tk.W)
 
 
@@ -243,6 +281,7 @@ for i in range(tableCount):
 editingReady = True
 ###Packing
 greeting.grid(row=0)
+
 tables.grid(row=1)
 frm.grid()
 

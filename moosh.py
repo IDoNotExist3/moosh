@@ -2,6 +2,7 @@ import psycopg2
 import tkinter as tk
 import atexit
 from datetime import datetime
+import datetime
 
 tableCount = 3
 editingReady = False
@@ -82,8 +83,18 @@ def save():
             # tempCursor.execute(sqlRollback)
             conn.commit()
 
-def addEntry():
-
+def addEntry(type):
+    if type == "jars":
+        print("Jar Update")
+        e =tk.Entry(master=tableFrames[0],validate="key",width=20)
+        e.grid(row = 0, column=0)
+    elif type == "bulk":
+        print("Bulk Update")
+    elif type == "flushes":
+        print("Flush Updates")
+    else:
+        print("Unkown update")
+    # print("Entrying")
     root.update()
 
 def taskCallback():
@@ -145,7 +156,7 @@ cursor = conn.cursor()
 ### Greeting
 greetingTime = ["Night", "Morning", "Afternoon", "Evening"]
 
-now = datetime.now().time()
+now = datetime.datetime.now().time()
 
 timing = int(now.hour/6)
 
@@ -162,15 +173,17 @@ tableNames = ["jars", "bulk"]
 vcmdBulk = root.register(bulkCallback)
 vcmdJars = root.register(jarCallback)
 callbacks = [vcmdJars,vcmdBulk]
-for i in range(tableCount):
-    
-    sql = f"SELECT * from {tableNames[i]} ORDER BY id"
+tableFrames = []
+for i in range(tableCount): ### Do jars and bulk tables
+    bulk = tk.Frame(master=tables, width = 1000)
+    title = tk.Label(master=bulk, text=tableNames[i], font=("Arial",20)).grid(sticky=tk.W)
+    sql = f"SELECT * from {tableNames[i]} ORDER BY id" ###Grabbing everything from table
     cursor.execute(sql)
     colnames = [desc[0] for desc in cursor.description]
     res = cursor.fetchall()
-    titles = tk.Frame(master=tables)
+    titles = tk.Frame(master=bulk)
     cnt = 0
-    for col in colnames:
+    for col in colnames: ###Column names
         text = tk.StringVar()
         text.set(col)
         tk.Label(
@@ -181,11 +194,10 @@ for i in range(tableCount):
         cnt = cnt+1
         # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
     titles.grid(sticky = tk.W)
-    bulk = tk.Frame(master=tables)
-    title = tk.Label(master=bulk, text=tableNames[i])
-    title.grid()
+    
     linecnt = 0
-    for line in res:
+    inno_date_saved = None
+    for line in res: ###Looping through each line of data
         print(line)
         frm_tmp_bulk = tk.Frame(master=bulk)
         cnt = 0
@@ -193,18 +205,37 @@ for i in range(tableCount):
                 print(txt)
                 # vcmd = root.register(callbacks[i])
                 e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(callbacks[i], line[0], cnt, "%P"),width=20)
-                if txt != None:
-                    e.insert(0,txt)
+                if tableNames[i] == "jars" and (colnames[cnt] == "bulk_date" or colnames[cnt] == "date_innoculated"):
+                    if colnames[cnt] == "date_innoculated": ## Save inno date for potential prediction
+                        inno_date_saved = txt
+                        if txt != None:
+                            e.insert(0,txt)
+                        else:
+                            e.insert(0, "None")
+                    elif colnames[cnt] == "bulk_date" and txt == None: ## Want to predict bulk date
+                        # temp_date = datetime.datetime.strptime(inno_date_saved, '%Y-%m-%d').date()
+                        # temp_date = temp_date + datetime.timedelta(days=14)
+                        temp_date = (inno_date_saved + datetime.timedelta(days=14)).strftime('%Y-%m-%d') ###Add 14 days to date and convert to string
+                        e.insert(0, "(Est) " + temp_date)
+                    else:
+                        if txt != None:
+                            e.insert(0,txt)
+                        else:
+                            e.insert(0, "None")
                 else:
-                    e.insert(0, "None")
+                    if txt != None:
+                        e.insert(0,txt)
+                    else:
+                        e.insert(0, "None")
                 e._id = line[0]
                 e.grid(row = 0, column=cnt) #left
                 cnt = cnt + 1
         frm_tmp_bulk.grid()
         lincnt = linecnt+1
-    addEntries = tk.Button(bulk, text = "Add Entry", command = root.update())
+    addEntries = tk.Button(bulk, text = "Add Entry", command = lambda: addEntry(tableNames[i]))
     addEntries.grid(sticky = tk.W)
-    bulk.grid(sticky = tk.W)
+    bulk.grid(sticky = tk.W, pady=20)
+    tableFrames.append(bulk)
 
 
 # sql = "SELECT * from jars"

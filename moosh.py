@@ -1,9 +1,11 @@
 import psycopg2
 import tkinter as tk
 import atexit
-from datetime import datetime
+# from datetime import datetime
 import datetime
+from tkcalendar import Calendar
 
+###Global Values
 tableCount = 3
 editingReady = False
 editedEntries = [{} for j in range(tableCount)]
@@ -13,11 +15,15 @@ JARS = 0
 BULK = 1
 FLUSHES = 2
 
+###Initial initializations
+
 conn = psycopg2.connect(database="moosh",
                         host="localhost",
                         user="postgres",
                         password="MintAndThyme!1!",
                         port="5432")
+
+
 
 ####Functions
 
@@ -133,10 +139,15 @@ def bulkCallback(id,place,value):
 # def main():
 ### Initialize Tkinter
 root = tk.Tk()
+
+
 sv = tk.StringVar()
 
 frm = tk.Frame(master=root)
 
+cal_frame = tk.Frame(master=root)
+cal = Calendar(master=cal_frame, selectmode = 'day', year = 2025, month = 5, day = 1)
+cal.grid()
 
 ######TESTING
 menubar = tk.Menu(root)
@@ -315,6 +326,7 @@ greeting.grid(row=0)
 
 tables.grid(row=1)
 frm.grid()
+cal_frame.grid()
 
 ### Begin program
 print("Breakpoint")

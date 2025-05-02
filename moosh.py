@@ -4,6 +4,10 @@ import atexit
 # from datetime import datetime
 import datetime
 from tkcalendar import Calendar
+from moosh_calendary import MooshEvents
+# from jsonify import jsonify
+ 
+from flask import Flask, jsonify
 
 ###Global Values
 tableCount = 3
@@ -26,6 +30,32 @@ conn = psycopg2.connect(database="moosh",
 
 
 ####Functions
+class TkinterCalendar(Calendar):
+
+    def formatmonth(self, master, year, month):
+
+        dates = self.monthdatescalendar(year, month)
+
+        frame = tk.Frame(master)
+
+        self.labels = []
+
+        for r, week in enumerate(dates):
+            labels_row = []
+            for c, date in enumerate(week):
+                label = tk.Button(frame, text=date.strftime('%Y\n%m\n%d'))
+                label.grid(row=r, column=c)
+
+                if date.month != month:
+                    label['bg'] = '#aaa'
+
+                if c == 6:
+                    label['fg'] = 'red'
+
+                labels_row.append(label)
+            self.labels.append(labels_row)
+
+        return frame
 
 def get_all_text_of_tasks(parent_widget):
     print("printing children")
@@ -146,8 +176,48 @@ sv = tk.StringVar()
 frm = tk.Frame(master=root)
 
 cal_frame = tk.Frame(master=root)
-cal = Calendar(master=cal_frame, selectmode = 'day', year = 2025, month = 5, day = 1)
+
+''' calendar shit
+class MyCalendar(Calendar):
+
+    def _next_month(self):
+        Calendar._next_month(self)
+        self.event_generate('<<CalendarMonthChanged>>')
+
+    def _prev_month(self):
+        Calendar._prev_month(self)
+        self.event_generate('<<CalendarMonthChanged>>')
+
+    def _next_year(self):
+        Calendar._next_year(self)
+        self.event_generate('<<CalendarMonthChanged>>')
+
+    def _prev_year(self):
+        Calendar._prev_year(self)
+        self.event_generate('<<CalendarMonthChanged>>')
+
+    def get_displayed_month_year(self):
+        return self._date.month, self._date.year
+
+
+def on_change_month(event):
+    # remove previously displayed events
+    cal.calevent_remove('all')
+    year, month = cal.get_displayed_month_year()
+    # display the current month events 
+    # ...
+    print(year, month)
+
+cal = MyCalendar(cal_frame)
+cal.pack()
+
+cal.bind('<<CalendarMonthChanged>>', on_change_month)
+'''
+cal = Calendar(master=cal_frame, font = "Arial 20", locale='en_US', selectmode = 'day', year = 2025, month = 5, day = 1)
+cal.calevent_create(datetime.datetime.today().date(), "AHHH", tags=["jar"])
 cal.grid()
+
+
 
 ######TESTING
 menubar = tk.Menu(root)
@@ -327,6 +397,15 @@ greeting.grid(row=0)
 tables.grid(row=1)
 frm.grid()
 cal_frame.grid()
+
+###
+dict = MooshEvents().get_upcoming_as_dict()
+print(dict)
+# print(dict[0])
+# jsonify(dict)
+
+
+
 
 ### Begin program
 print("Breakpoint")

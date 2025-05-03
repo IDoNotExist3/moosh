@@ -19,6 +19,10 @@ JARS = 0
 BULK = 1
 FLUSHES = 2
 
+bulkCols = ["id","variety","container_type","bulk_date","flush_ids","p-value"]
+jarCols = ["id","variety","date_innoculated","shake_date","bulk_date","bulk_id","grain","p-value"]
+flushCols = ["id", "variety", "flush_order", "harvest_date", "weight_grams", "bulk_id", "p-value"]
+
 ###Initial initializations
 
 conn = psycopg2.connect(database="moosh",
@@ -137,7 +141,6 @@ def taskCallback():
       print("1")
 #       get_all_text_of_tasks(tables)
       return True
-jarCols = ["id","variety","date_innoculated","shake_date","bulk_date","bulk_id","grain"]
 def jarCallback(id,place,value):
       if editingReady:
        #       print(id)
@@ -151,7 +154,7 @@ def jarCallback(id,place,value):
       else:
           return True
       return True
-bulkCols = ["id","variety","container_type","bulk_date","flush_ids"]
+
 def bulkCallback(id,place,value):
       if editingReady:
        #       print(id)
@@ -159,9 +162,23 @@ def bulkCallback(id,place,value):
        #       print(place)
        print(f'val: {value}, id: {id}, place: {place}')
        #       sql = f"UPDATE jars SET {jarCols[int(place)]} = {value}"
-       sql = f"UPDATE jars SET {bulkCols[int(place)]} = {value}"
+       sql = f"UPDATE bulk SET {bulkCols[int(place)]} = {value}"
     #    editedEntries[BULK].append(id)
        editedEntries[BULK].update({f"{id},{place}": f"{value}"})
+      else:
+          return True
+      return True
+
+def flushCallback(id,place,value):
+      if editingReady:
+       #       print(id)
+       # #       get_all_text_of_tasks(tables)
+       #       print(place)
+       print(f'val: {value}, id: {id}, place: {place}')
+       #       sql = f"UPDATE jars SET {jarCols[int(place)]} = {value}"
+       sql = f"UPDATE flush SET {flushCols[int(place)]} = {value}"
+    #    editedEntries[BULK].append(id)
+       editedEntries[FLUSHES].update({f"{id},{place}": f"{value}"})
       else:
           return True
       return True
@@ -219,6 +236,8 @@ cal.grid()
 
 
 
+
+
 ######TESTING
 menubar = tk.Menu(root)
 menubar.add_command(label="Save", command=save, font=("Arial", 20))
@@ -249,11 +268,12 @@ greeting = tk.Label(
 
 ### Fill tables
 #### JARS
-tableCount = 2
-tableNames = ["jars", "bulk"]
+tableCount = 3
+tableNames = ["jars", "bulk", "flushes"]
 vcmdBulk = root.register(bulkCallback)
 vcmdJars = root.register(jarCallback)
-callbacks = [vcmdJars,vcmdBulk]
+vcmdFlushes = root.register(flushCallback)
+callbacks = [vcmdJars,vcmdBulk,vcmdFlushes]
 tableFrames = []
 for i in range(tableCount): ### Do jars and bulk tables
     bulk = tk.Frame(master=tables, width = 1000)
@@ -404,13 +424,19 @@ print(dict)
 # print(dict[0])
 # jsonify(dict)
 
+# canvas = tk.Canvas(
+#     root, scrollregion = "0 0 2000 1000", width = 400, height = 400)
+# canvas.grid(row = 0, column = 0, sticky = tk.NSEW)
 
-
+# scroll = tk.Scrollbar(tableFrames, orient = tk.VERTICAL, command = canvas.yview)
+# scroll.grid(row = 0, column = 1, sticky = tk.NS)
+# canvas.config(yscrollcommand = scroll.set)
+# item = canvas.create_window(( 2, 2 ), anchor = tk.NW,  window = tableFrames )
 
 ### Begin program
 print("Breakpoint")
 root.title('Moosh')
-root.geometry("1000x800")
+root.geometry("1200x1200")
 root.mainloop()
 
 

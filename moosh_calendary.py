@@ -10,7 +10,7 @@ class MooshEvents:
  
     def get_upcoming_as_dict(self) -> dict:
         """Return upcoming"""
-        output = {"gigs": []}
+        output = {"events": []}
  
         service = build("calendar", "v3", credentials=self.connector.creds)
  
@@ -68,6 +68,6 @@ class MooshEvents:
             except Exception:
                 continue
  
-            output["gigs"].append(gig)
+            output["events"].append(gig)
  
         return output

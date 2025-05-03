@@ -1,22 +1,55 @@
 import calendar
-from datetime import datetime
+from datetime import datetime, date
 from googleapiclient.discovery import build
-from connector import Connector
+from connector import EventsConnector, CalendarConnector
+from urllib.error import HTTPError
+import json
 
 class MooshEvents:
     """Google Calendar Events"""
+    service = None
+    events = None
     def __init__(self) -> None:
-        self.connector = Connector()
+        self.connector = EventsConnector()
+        self.calCon = CalendarConnector()
+
+    def add_event(self) -> None:
+        serv = build("calendar", "v3", credentials=self.connector.creds)
+        event = {
+            'summary' : "Test Upload 2",
+            'id' : "00000",
+            'start' : {'date': "2025-05-14"},
+            'end' : {'date': "2025-05-14"}
+        }
+        event2 = {
+            'summary' : "Test Upload 2",
+            'id' : "00001",
+            'start' : {'date': "2025-05-15"},
+            'end' : {'date': "2025-05-15"}
+        }
+        eventDict = {"00000": event, "00001" : event2}
+        try:
+            e = serv.events().insert(
+                calendarId="ad83c44ba72d92c88afe5c33dfddf8dddb51f8fb56ab040a3f579371acc23c18@group.calendar.google.com",
+                body = event2
+            ).execute()
+        except HTTPError:
+            print("Event already exists")
+        except:
+            print("Unkown error in event creation")
+        
+        with open("data/events.json", 'w') as fp:
+            json.dump(eventDict, fp)
  
     def get_upcoming_as_dict(self) -> dict:
         """Return upcoming"""
         output = {"events": []}
- 
-        service = build("calendar", "v3", credentials=self.connector.creds)
+        self.calService = build("calendar", "v3", credentials=self.calCon.creds)
+        self.service = build("calendar", "v3", credentials=self.connector.creds)
  
         # Call the Calendar API
         events_result = (
-            service.events()
+            self.service.events()
             .list(
                 calendarId="ad83c44ba72d92c88afe5c33dfddf8dddb51f8fb56ab040a3f579371acc23c18@group.calendar.google.com",
                 # maxResults=10,
@@ -25,13 +58,13 @@ class MooshEvents:
             )
             .execute()
         )
-        events = events_result.get("items", [])
+        self.events = events_result.get("items", [])
         # print("\nAHHHHHH\n")
                 # print(event)
-        if not events:
+        if not self.events:
             return output
 
-        for event in events:
+        for event in self.events:
             # print("eventing")
             # # print(event)
             # print(type(event))

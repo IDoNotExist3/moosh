@@ -269,7 +269,7 @@ greeting = tk.Label(
 ### Fill tables
 #### JARS
 tableCount = 3
-tableNames = ["jars", "bulk", "flushes"]
+tableNames = ["spawn", "bulk", "flush"]
 vcmdBulk = root.register(bulkCallback)
 vcmdJars = root.register(jarCallback)
 vcmdFlushes = root.register(flushCallback)
@@ -419,7 +419,10 @@ frm.grid()
 cal_frame.grid()
 
 ###
-dict = MooshEvents().get_upcoming_as_dict()
+mooshCal = MooshEvents()
+dict = mooshCal.get_upcoming_as_dict()
+mooshCal.add_event()
+
 print(dict)
 # print(dict[0])
 # jsonify(dict)

@@ -419,9 +419,10 @@ frm.grid()
 cal_frame.grid()
 
 ###
+today = datetime.datetime.now(datetime.timezone.utc).astimezone()
 mooshCal = MooshEvents()
 dict = mooshCal.get_upcoming_as_dict()
-mooshCal.add_event()
+# mooshCal.add_event("TestTestTest", today, today)
 
 print(dict)
 # print(dict[0])

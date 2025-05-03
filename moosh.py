@@ -13,11 +13,13 @@ from flask import Flask, jsonify
 tableCount = 3
 editingReady = False
 editedEntries = [{} for j in range(tableCount)]
-tableNames = ["jars", "bulk", "flushes"]
+tableNames = ["spawn", "bulk", "flush"]
 print(editedEntries)
-JARS = 0
+SPAWN = 0
 BULK = 1
-FLUSHES = 2
+FLUSH = 2
+
+columnCounts = [0,0,0,0,0,0]
 
 bulkCols = ["id","variety","container_type","bulk_date","flush_ids","p-value"]
 jarCols = ["id","variety","date_innoculated","shake_date","bulk_date","bulk_id","grain","p-value"]
@@ -124,14 +126,19 @@ def save():
             conn.commit()
 
 def addEntry(type):
-    if type == "jars":
+    global columnCounts
+    if type == "spawn":
         print("Jar Update")
         e =tk.Entry(master=tableFrames[0],validate="key",width=20)
-        e.grid(row = 0, column=0)
+        e.grid(row = columnCounts[0], column=0)
+        columnCounts[0] = columnCounts[0] + 1
     elif type == "bulk":
         print("Bulk Update")
-    elif type == "flushes":
+    elif type == "flush":
         print("Flush Updates")
+        e =tk.Entry(master=tableFrames[2],validate="key",width=20)
+        e.grid(row = columnCounts[2]+2, column=0)
+        columnCounts[2] = columnCounts[2] + 1
     else:
         print("Unkown update")
     # print("Entrying")
@@ -147,10 +154,10 @@ def jarCallback(id,place,value):
        # #       get_all_text_of_tasks(tables)
        #       print(place)
        print(f'val: {value}, id: {id}, place: {place}')
-       sql = f"UPDATE jars SET {(jarCols[int(place)])} = {value}"
+       sql = f"UPDATE spawn SET {(jarCols[int(place)])} = {value}"
        print(sql)
     #    tempCursor = conn.cursor()
-       editedEntries[JARS].update({f"{id},{place}": f"{value}"})
+       editedEntries[SPAWN].update({f"{id},{place}": f"{value}"})
       else:
           return True
       return True
@@ -161,7 +168,7 @@ def bulkCallback(id,place,value):
        # #       get_all_text_of_tasks(tables)
        #       print(place)
        print(f'val: {value}, id: {id}, place: {place}')
-       #       sql = f"UPDATE jars SET {jarCols[int(place)]} = {value}"
+       #       sql = f"UPDATE spawn SET {jarCols[int(place)]} = {value}"
        sql = f"UPDATE bulk SET {bulkCols[int(place)]} = {value}"
     #    editedEntries[BULK].append(id)
        editedEntries[BULK].update({f"{id},{place}": f"{value}"})
@@ -175,16 +182,19 @@ def flushCallback(id,place,value):
        # #       get_all_text_of_tasks(tables)
        #       print(place)
        print(f'val: {value}, id: {id}, place: {place}')
-       #       sql = f"UPDATE jars SET {jarCols[int(place)]} = {value}"
+       #       sql = f"UPDATE spawn SET {jarCols[int(place)]} = {value}"
        sql = f"UPDATE flush SET {flushCols[int(place)]} = {value}"
     #    editedEntries[BULK].append(id)
-       editedEntries[FLUSHES].update({f"{id},{place}": f"{value}"})
+       editedEntries[FLUSH].update({f"{id},{place}": f"{value}"})
       else:
           return True
       return True
 
 # def main():
 ### Initialize Tkinter
+
+
+
 root = tk.Tk()
 
 
@@ -267,15 +277,15 @@ greeting = tk.Label(
 )
 
 ### Fill tables
-#### JARS
+#### SPAWN
 tableCount = 3
 tableNames = ["spawn", "bulk", "flush"]
 vcmdBulk = root.register(bulkCallback)
-vcmdJars = root.register(jarCallback)
-vcmdFlushes = root.register(flushCallback)
-callbacks = [vcmdJars,vcmdBulk,vcmdFlushes]
+vcmdSpawn = root.register(jarCallback)
+vcmdFlush = root.register(flushCallback)
+callbacks = [vcmdSpawn,vcmdBulk,vcmdFlush]
 tableFrames = []
-for i in range(tableCount): ### Do jars and bulk tables
+for i in range(tableCount): ### Do spawn and bulk tables
     bulk = tk.Frame(master=tables, width = 1000)
     title = tk.Label(master=bulk, text=tableNames[i], font=("Arial",20)).grid(sticky=tk.W)
     sql = f"SELECT * from {tableNames[i]} ORDER BY id" ###Grabbing everything from table
@@ -299,6 +309,7 @@ for i in range(tableCount): ### Do jars and bulk tables
     linecnt = 0
     inno_date_saved = None
     for line in res: ###Looping through each line of data
+        columnCounts[i] = columnCounts[i] + 1
         print(line)
         frm_tmp_bulk = tk.Frame(master=bulk)
         cnt = 0
@@ -306,7 +317,7 @@ for i in range(tableCount): ### Do jars and bulk tables
                 print(txt)
                 # vcmd = root.register(callbacks[i])
                 e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(callbacks[i], line[0], cnt, "%P"),width=20)
-                if tableNames[i] == "jars" and (colnames[cnt] == "bulk_date" or colnames[cnt] == "date_innoculated"):
+                if tableNames[i] == "spawn" and (colnames[cnt] == "bulk_date" or colnames[cnt] == "date_innoculated"):
                     if colnames[cnt] == "date_innoculated": ## Save inno date for potential prediction
                         inno_date_saved = txt
                         if txt != None:
@@ -339,7 +350,7 @@ for i in range(tableCount): ### Do jars and bulk tables
     tableFrames.append(bulk)
 
 
-# sql = "SELECT * from jars"
+# sql = "SELECT * from spawn"
 # cursor.execute(sql)
 # colnames = [desc[0] for desc in cursor.description]
 # res = cursor.fetchall()
@@ -356,10 +367,10 @@ for i in range(tableCount): ### Do jars and bulk tables
 #     cnt = cnt+1
 #     # tk.Entry(master=jar_titles,textvariable=text,validate="focusout",width=20).pack(side=tk.LEFT)
 # jar_titles.grid()
-# jars = tk.Frame(master=tables)
+# spawn = tk.Frame(master=tables)
 # linecnt = 0
 # for line in res:
-#        frm_tmp = tk.Frame(master=jars)
+#        frm_tmp = tk.Frame(master=spawn)
 #        cnt = 0
 #        for txt in line:
 #               vcmd = root.register(jarCallback)
@@ -374,7 +385,7 @@ for i in range(tableCount): ### Do jars and bulk tables
 #               cnt = cnt + 1
 #        frm_tmp.grid(row = linecnt)
 #        linecnt = linecnt + 1
-# jars.grid()
+# spawn.grid()
 # #### Bulk
 # sql = "SELECT * from bulk"
 # cursor.execute(sql)

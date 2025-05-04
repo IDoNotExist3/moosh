@@ -112,7 +112,7 @@ def save_all_text_of_tasks(parent_widget):
                 # elif child_widget2.winfo_class() == 'Label':
                 #     # print("Another label...")  
 
-def newEntrySave(entries, table, entryWindow):
+def newEntrySave(entries, table: str, entryWindow):
     global globalColNames
     colNames = globalColNames[table]
     curs = conn.cursor()
@@ -163,27 +163,94 @@ def save():
             # tempCursor.execute(sqlRollback)
             conn.commit()
 
-def addEntry(type, tableFrames):
+def reload():
+    run()
+
+def addEntry(table: str, tableFrames):
     global columnCounts
-    open_new_window()
-    if type == "spawn":
+    open_new_window(table)
+    if table == "spawn":
         print("Jar Update")
-        e =tk.Entry(master=tableFrames[0],validate="key",width=20)
-        e.grid(row = columnCounts[0], column=0)
-        columnCounts[0] = columnCounts[0] + 1
-    elif type == "bulk":
+        # e =tk.Entry(master=tableFrames[0],validate="key",width=20)
+        # e.grid(row = columnCounts[0], column=0)
+        # columnCounts[0] = columnCounts[0] + 1
+    elif table == "bulk":
         print("Bulk Update")
-    elif type == "flush":
+    elif table == "flush":
         print("Flush Updates")
-        e =tk.Entry(master=tableFrames[2],validate="key",width=20)
-        e.grid(row = columnCounts[2]+2, column=0)
-        columnCounts[2] = columnCounts[2] + 1
+        # e =tk.Entry(master=tableFrames[2],validate="key",width=20)
+        # e.grid(row = columnCounts[2]+2, column=0)
+        # columnCounts[2] = columnCounts[2] + 1
     else:
         print("Unkown update")
     # print("Entrying")
     # root.update()
+# finalDates = {}
+finalDates = [5,5,3]
+# finalDates["spawn"] = 5
+# finalDates["bulk"] = 5
+# finalDates["flush"] = 3
+spawnTimes = [
+    [0,14,0],
+    [0,14,14],
+    [0,0,0],
+]
+def addPrediction(frm: tk.Frame, nameInt: int):
+    child_widgets = frm.winfo_children()
+    stat = child_widgets[1].get()
+    id = int(child_widgets[0].get())
+    variety = child_widgets[2].get()
+    date = child_widgets[finalDates[nameInt]].get()
+    fin = child_widgets[finalDates[nameInt]].get()
+    destinations = child_widgets[-3].get()
+    print(f"stat:{stat}, id:{id}, variety:{variety}, finalDate:{fin}")
+    print(f"Status is {stat}")
+    for i, child in zip(range(len(child_widgets)), child_widgets):
+        if child.winfo_class() == 'Entry':
+            print(f"{i}: {child.get()}")
+    print(f"Destinations are:")
+    print(destinations)
+    print(type(destinations))
+    
+    if int(stat) == 1 and nameInt < 2:
+        dest_id = insertEntry(nameInt, variety, date, id)
+        # if destinations == None:
+        #     child_widgets[finalDates[nameInt]].insert(0, dest_id)
+        #     # editedEntries[nameInt].update({f"{id},{-2}": f"{dest_id}"})
+        # editedEntries[BULK].update({f"{id},{len(bulkCols)-2}": f"{value}"})
+    elif int(stat) > 1:
+        print()
+    
+containerTypes = {}
+containerTypes["LM"] = "bucket"
+containerTypes["KT"] = "bin"
+
+def insertEntry(nameInt: int, variety:str, date:str, source_id:int) -> int:
+    cursor = conn.cursor()
+    
+    print(f"Making new {tableNames[nameInt]} entry {spawnTimes[nameInt][-1]} after")
+    newDate=(datetime.datetime.strptime(date, "%Y-%m-%d").date() + datetime.timedelta(days=spawnTimes[nameInt][-1])).strftime("%Y-%m-%d")
+    try:
+        match nameInt:
+            case 0:
+                sql = f"INSERT INTO bulk (variety, creation_date, container_type, source_id) VALUES ('{variety}','{newDate}','{containerTypes[variety]}','{source_id}') RETURNING id"
+                print(sql)
+                cursor.execute(sql)
+                id = (cursor.fetchone()[0])
+
+                return id
+            case 1:
+                sql = f"INSERT INTO flush (variety, harvest_date, source_id) VALUES ('{variety}','{newDate}','{source_id}') RETURNING id"
+                print(sql)
+                cursor.execute(sql)
+                id = (cursor.fetchone()[0])
+
+                return id
+    finally:
+        conn.commit()
+
         
-def open_new_window():
+def open_new_window(table: str):
     global root
     new_window = tk.Toplevel(master=root)  # Create a new window
     tk.Label(new_window, font="Arial 20", text="New Entry").grid(pady=20)
@@ -191,7 +258,8 @@ def open_new_window():
     entries = []
 
     curs = conn.cursor()
-    curs.execute("Select * FROM spawn LIMIT 0")
+    curs.execute(f"Select * FROM {table} LIMIT 0")
+    print(f"Selecting from {table}")
     colnames = [desc[0] for desc in curs.description]
 
     titles = tk.Frame(master=new_window)
@@ -251,7 +319,7 @@ def open_new_window():
     #     # new_window.update()
 
     menubar = tk.Menu(new_window)
-    menubar.add_command(label="Save", command=lambda: newEntrySave(entries, "spawn", new_window), font=("Arial", 20))
+    menubar.add_command(label="Save", command=lambda: newEntrySave(entries, table, new_window), font=("Arial", 20))
     # menubar.add_command(label="Close", command=exit_btn, font = ("Arial", 20))
     new_window.config(menu=menubar)
 
@@ -353,9 +421,9 @@ def run():
 
     cal.bind('<<CalendarMonthChanged>>', on_change_month)
     '''
-    cal = Calendar(master=cal_frame, font = "Arial 20", locale='en_US', selectmode = 'day', year = 2025, month = 5, day = 1)
-    cal.calevent_create(datetime.datetime.today().date(), "AHHH", tags=["jar"])
-    cal.grid()
+    # cal = Calendar(master=cal_frame, font = "Arial 20", locale='en_US', selectmode = 'day', year = 2025, month = 5, day = 1)
+    # cal.calevent_create(datetime.datetime.today().date(), "AHHH", tags=["jar"])
+    # cal.grid()
 
 
 
@@ -364,6 +432,7 @@ def run():
     ######TESTING
     menubar = tk.Menu(root)
     menubar.add_command(label="Save", command=save, font=("Arial", 20))
+    menubar.add_command(label="Reload", command=reload, font=("Arial", 20))
     # menubar.add_command(label="Quit!", command=Hello)
     root.config(menu=menubar)
 
@@ -426,38 +495,66 @@ def run():
             print(line)
             frm_tmp_bulk = tk.Frame(master=bulk)
             cnt = 0
+            stat = int(line[1])
             for txt in line:
-                    print(txt)
-                    # vcmd = root.register(callbacks[i])
-                    e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(callbacks[i], line[0], cnt, "%P"),width=20)
-                    if tableNames[i] == "spawn" and (colnames[cnt] == "bulk_date" or colnames[cnt] == "date_innoculated"):
-                        if colnames[cnt] == "date_innoculated": ## Save inno date for potential prediction
-                            inno_date_saved = txt
-                            if txt != None:
-                                e.insert(0,txt)
-                            else:
-                                e.insert(0, "None")
-                        elif colnames[cnt] == "bulk_date" and txt == None: ## Want to predict bulk date
-                            # temp_date = datetime.datetime.strptime(inno_date_saved, '%Y-%m-%d').date()
-                            # temp_date = temp_date + datetime.timedelta(days=14)
-                            temp_date = (inno_date_saved + datetime.timedelta(days=14)).strftime('%Y-%m-%d') ###Add 14 days to date and convert to string
-                            e.insert(0, "(Est) " + temp_date)
+                print(txt)
+                # vcmd = root.register(callbacks[i])
+                if "date" in colnames[cnt]:
+                    bg = ""
+                    if stat == 0:
+                        bg = "orange" if (cnt==2) else "red"
+                    elif stat == 1:
+                        bg = "green"
+                    else:
+                        if cnt <= stat: ###First event finished
+                            bg = "green"
+                        elif cnt == stat + 2:
+                            bg = "orange"
                         else:
-                            if txt != None:
-                                e.insert(0,txt)
-                            else:
-                                e.insert(0, "None")
+                            bg = "red"
+                    e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(callbacks[i], line[0], cnt, "%P"),width=20, bg=bg)
+                elif colnames[cnt] == "status":
+                    bg = ""
+                    match int(txt):
+                        case 0:
+                            bg = "red"
+                        case 1:
+                            bg = "green"
+                        case 2:
+                            bg = "orange"
+                    e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(callbacks[i], line[0], cnt, "%P"),width=20, bg=bg)
+                else:
+                    e =tk.Entry(master=frm_tmp_bulk,validate="key",validatecommand=(callbacks[i], line[0], cnt, "%P"),width=20)
+                if tableNames[i] == "spawn" and (colnames[cnt] == "bulk_date" or colnames[cnt] == "date_innoculated"):
+                    if colnames[cnt] == "date_innoculated": ## Save inno date for potential prediction
+                        inno_date_saved = txt
+                        if txt != None:
+                            e.insert(0,txt)
+                        else:
+                            e.insert(0, "None")
+                    elif colnames[cnt] == "bulk_date" and txt == None: ## Want to predict bulk date
+                        # temp_date = datetime.datetime.strptime(inno_date_saved, '%Y-%m-%d').date()
+                        # temp_date = temp_date + datetime.timedelta(days=14)
+                        temp_date = (inno_date_saved + datetime.timedelta(days=14)).strftime('%Y-%m-%d') ###Add 14 days to date and convert to string
+                        e.insert(0, "(Est) " + temp_date)
                     else:
                         if txt != None:
                             e.insert(0,txt)
                         else:
                             e.insert(0, "None")
+                else:
+                    if txt != None:
+                        e.insert(0,txt)
+                    else:
+                        e.insert(0, "None")
                     e._id = line[0]
                     e.grid(row = 0, column=cnt) #left
                     cnt = cnt + 1
+            predictBut = tk.Button(frm_tmp_bulk, text = "Add Prediction", command = lambda tmp=frm_tmp_bulk, nameInt=i: addPrediction(tmp, nameInt))
+            predictBut.grid(row=0, column=cnt)
             frm_tmp_bulk.grid()
             lincnt = linecnt+1
-        addEntries = tk.Button(bulk, text = "Add Entry", command = lambda: addEntry(tableNames[i], tableFrames))
+        addEntries = tk.Button(bulk, text = "Add Entry", command = lambda tmp=tableNames[i]: addEntry(tmp, tableFrames))
         addEntries.grid(sticky = tk.W)
         bulk.grid(sticky = tk.W, pady=20)
         tableFrames.append(bulk)
@@ -564,7 +661,7 @@ def run():
     ### Begin program
     print("Breakpoint")
     root.title('Moosh')
-    root.geometry("1920x1200")
+    root.geometry("2560x1440")
     root.mainloop()
 
 

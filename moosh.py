@@ -41,6 +41,8 @@ conn = psycopg2.connect(database="moosh",
 
 root = tk.Tk()
 
+mooshCal = MooshEvents()
+
 ####Functions
 class TkinterCalendar(Calendar):
 
@@ -140,16 +142,22 @@ def newEntrySave(entries, table: str, entryWindow):
     sqlFinal = sql+sql2+")"+";"
     curs.execute(sqlFinal)
     conn.commit()
+
+    # mooshCal.add_event(
+    #     summary=f"{}"
+    # )
     # entryWindo
     # entryWindow.update()
     
 
 def save():
     # save_all_text_of_tasks(tables)
+    print(f"saving with len {len(editedEntries)}")
     
     tempCursor = conn.cursor()
     
     for table, name in zip(editedEntries, tableNames):
+        print(f"Saving {table}")
         dicti = table.items()
         for entry in dicti:
             split = entry[0].split(",")
@@ -161,7 +169,7 @@ def save():
             #####TESTING
             # sqlRollback = "ROLLBACK"
             # tempCursor.execute(sqlRollback)
-            conn.commit()
+    conn.commit()
 
 def reload():
     run()
@@ -333,7 +341,9 @@ def taskCallback():
 #       get_all_text_of_tasks(tables)
       return True
 def jarCallback(id,place,value):
+      print("Jar Callbacks")
       if editingReady:
+       print("jar ready callback")
        #       print(id)
        # #       get_all_text_of_tasks(tables)
        #       print(place)
@@ -342,6 +352,7 @@ def jarCallback(id,place,value):
        print(sql)
     #    tempCursor = conn.cursor()
        editedEntries[SPAWN].update({f"{id},{place}": f"{value}"})
+       print(({f"Saving {id},{place}": f"{value}"}))
       else:
           return True
       return True
@@ -379,6 +390,7 @@ def flushCallback(id,place,value):
 
 def run():
     global root
+    global editingReady
     sv = tk.StringVar()
 
     frm = tk.Frame(master=root)
@@ -641,7 +653,6 @@ def run():
 
     ###
     today = datetime.datetime.now(datetime.timezone.utc).astimezone()
-    mooshCal = MooshEvents()
     dict = mooshCal.get_upcoming_as_dict()
     # mooshCal.add_event("TestTestTest", today, today)
 

@@ -27,7 +27,7 @@ class MooshEvents:
         with open("data/events.json", 'w') as fp:
             json.dump(self.jsonEvents, fp, indent=4, sort_keys=True, default=str)
 
-    def add_event(self, summary: str, start: datetime, end: datetime, eventID=None) -> None:
+    def add_event(self, summary: str, start: datetime.date, end: datetime.date, eventID=None) -> None:
         """
         add_event adds or updates event based on eventID
 
@@ -42,7 +42,7 @@ class MooshEvents:
         if eventID not in self.jsonEvents:
             #create event with incremented id from 00000->99999
             print("dating")
-            print(start.date().strftime("%Y-%m-%d"))
+            print(start.strftime("%Y-%m-%d"))
             testDate = datetime.datetime.now().isoformat()
             testDate2 = datetime.datetime.now(datetime.UTC).astimezone().date()
             testActualDate = datetime.datetime.today().date()
@@ -63,15 +63,15 @@ class MooshEvents:
             print(testActualDate.isoformat())
             # testDate2 = testDate2.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             event = {
-                'summary': 'Google I/O 2023',
-                'location': '800 Howard St., San Francisco, CA 94103',
-                'description': 'A chance to hear more about Google\'s developer products.',
+                'summary': summary,
+                # 'location': '800 Howard St., San Francisco, CA 94103',
+                # 'description': 'A chance to hear more about Google\'s developer products.',
                 'start': {
-                    'date': testActualDate.isoformat(),
+                    'date': start.isoformat(),
                     'timeZone': 'America/Los_Angeles',
                 },
                 'end': {
-                    'date': testActualDate.isoformat(),
+                    'date': end.isoformat(),
                     'timeZone': 'America/Los_Angeles',
                 },
                 # 'recurrence': [
@@ -91,6 +91,7 @@ class MooshEvents:
             try:
                 ### Insert new event into google calendar
                 print("Ah?")
+                print(f"Inserting event {event}")
                 e = serv.events().insert(
                     calendarId="ad83c44ba72d92c88afe5c33dfddf8dddb51f8fb56ab040a3f579371acc23c18@group.calendar.google.com",
                     body = event

@@ -221,7 +221,14 @@ def addPrediction(frm: tk.Frame, nameInt: int):
     print(type(destinations))
     
     if int(stat) == 1 and nameInt < 2:
+        # newDate=(datetime.datetime.strptime(date, "%Y-%m-%d").date() + datetime.timedelta(days=spawnTimes[nameInt][-1])).strftime("%Y-%m-%d")
+        newDate = datetime.datetime.strptime(date, "%Y-%m-%d").date() + datetime.timedelta(days=spawnTimes[nameInt][-1])
         dest_id = insertEntry(nameInt, variety, date, id)
+        mooshCal.add_event(
+            summary = f"{tableNames[nameInt+1]} {variety}",
+            start = newDate,
+            end = newDate
+        )
         # if destinations == None:
         #     child_widgets[finalDates[nameInt]].insert(0, dest_id)
         #     # editedEntries[nameInt].update({f"{id},{-2}": f"{dest_id}"})
